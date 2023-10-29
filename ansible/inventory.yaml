@@ -1,0 +1,9 @@
+webserver:
+  hosts:
+    webserver01:
+      ansible_host: xxx.xxx.xxx.xxx
+      http_port: 80
+      https_port: 443
+      # domain: dev.ctf.cafe
+  vars:
+    ansible_user: root

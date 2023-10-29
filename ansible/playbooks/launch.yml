@@ -1,0 +1,10 @@
+- name: Start/Restart docker services for CTFCafe
+  hosts: webserver
+  tasks:
+    - name: Tear down existing services
+      community.docker.docker_compose:
+        project_src: /etc/ctfcafe
+        state: absent
+    - name: Create and start services
+      community.docker.docker_compose:
+        project_src: /etc/ctfcafe

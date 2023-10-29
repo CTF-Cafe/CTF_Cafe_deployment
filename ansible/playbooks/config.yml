@@ -1,0 +1,16 @@
+- name: Config docker-compose.yml for CTFCafe
+  hosts: webserver
+  tasks:
+    - name: Define frontEnd/backEnd URI
+      replace:
+        path: /etc/ctfcafe/docker-compose.yml
+        regexp: '(?P<prop>BACKEND_URI|FRONTEND_URI)=.*$'
+        replace: '\g<prop>=https://{{ domain }}'
+      when: domain is defined
+
+    - name: Define frontEnd/backEnd URI
+      replace:
+        path: /etc/ctfcafe/docker-compose.yml
+        regexp: '(?P<prop>BACKEND_URI|FRONTEND_URI)=.*$'
+        replace: '\g<prop>=http://{{ ansible_host }}'
+      when: domain is undefined

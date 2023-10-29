@@ -1,0 +1,108 @@
+- name: Setup server for CTFCafe
+  hosts: webserver
+  tasks:
+    - name: APT Update & Upgrade
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    - name: Install required system packages
+      apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+        state: latest
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Install docker-ce
+      apt:
+        name: docker-ce
+        state: latest
+
+    - name: Install docker-compose
+      get_url: 
+        url : https://github.com/docker/compose/releases/download/1.25.1-rc1/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: 'u+x,g+x'
+
+    - name: Install docker-compose Module for Python
+      pip:
+        name: docker-compose
+
+    - name: Install/Update to latest nginx
+      apt:
+        name: nginx
+        state: latest
+
+    - name: Install/Update to latest git
+      apt:
+        name: git
+        state: latest
+
+    - name: Install/Update to latest certbot
+      apt:
+        name: certbot
+        state: latest
+      when: domain is defined
+
+    - name: Install/Update to latest python3-certbot-nginx
+      apt:
+        name: python3-certbot-nginx
+        state: latest
+      when: domain is defined
+
+    - name: Clone the CTFCafe repo
+      git:
+        repo: https://github.com/CTF-Cafe/CTF_Cafe_platform.git
+        dest: /etc/ctfcafe
+        clone: true
+        single_branch: yes
+        version: master
+        force: yes
+      # register: repo_clone
+      # failed_when:
+      #   - repo_clone.failed
+      #   - not 'Local modifications' in repo_clone.msg
+
+    - name: Copy nginx config to be used
+      copy:
+        src: /etc/ctfcafe/nginx_ctf.conf
+        dest: /etc/nginx/sites-available/default
+        remote_src: true
+
+    - name: Define the nginx server_name as domain
+      replace:
+        path: /etc/nginx/sites-available/default
+        regexp: 'YOUR_SERVER'
+        replace: '{{ domain }}'
+      when: domain is defined
+
+    - name: Define the nginx server_name as IP
+      replace:
+        path: /etc/nginx/sites-available/default
+        regexp: 'YOUR_SERVER'
+        replace: '{{ ansible_host }}'
+      when: domain is undefined
+      
+    - name: Restart/Start nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: Setup Domain & SSL with certbot
+      ansible.builtin.shell: certbot --non-interactive --nginx -d {{ domain }}
+      when: domain is defined
