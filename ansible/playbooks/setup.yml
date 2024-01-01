@@ -86,14 +86,14 @@
 
     - name: Define the nginx server_name as domain
       replace:
-        path: /etc/nginx/sites-available/default
+        path: /etc/nginx/sites-available/{{ domain }}
         regexp: 'YOUR_SERVER'
         replace: '{{ domain }}'
       when: domain is defined
 
     - name: Define the nginx server_name as IP
       replace:
-        path: /etc/nginx/sites-available/default
+        path: /etc/nginx/sites-available/{{ domain }}
         regexp: 'YOUR_SERVER'
         replace: '{{ ansible_host }}'
       when: domain is undefined
